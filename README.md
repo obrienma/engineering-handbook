@@ -1,12 +1,12 @@
 # Vocation and Craft
 
-Software development standards, code review handbooks and related work. Work in progress.
+Software development standards, code review handbooks and related artifacts. Work in progress.
 
 ## What this is
 
 Review checklists, decision records and standards from my practice as a software developer. <!--Examples come from personal projects and practice exercises. --> I use LLMs in my process; the content is mine.
 
-It's public so it can be read and corrected. Positions change as I learn, and the git history shows how. If you think something is wrong, open an issue with the input that breaks it.
+It's public so it can be read and corrected. Positions change as I learn, and the git history shows how. If you think something is wrong, please do open an issue with the input that breaks it.
 
 ## Contents
 
