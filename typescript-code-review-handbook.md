@@ -1,10 +1,10 @@
-# **Code Review Handbook**
+# **Typescript Code Review Handbook**
 
 Run the quick pass on any code; each "no" points to a section ID where the smell, failing scenario, fix and tradeoff are written out.
 
 ## **Table of contents**
 
-- [**Code Review Handbook**](#code-review-handbook)
+- [**Typescript Code Review Handbook**](#typescript-code-review-handbook)
   - [**Table of contents**](#table-of-contents)
   - [**How to use this handbook**](#how-to-use-this-handbook)
     - [**Entry format**](#entry-format)
