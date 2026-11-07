@@ -11,7 +11,7 @@ Run the quick pass on any code; each "no" points to a section ID where the smell
     - [**Review order**](#review-order)
   - [**Quick pass**](#quick-pass)
     - [**Input matrix**](#input-matrix)
-    - [**Yes/no questions**](#yesno-questions)
+    - [**Scan table**](#scan-table)
   - [**Values**](#values)
     - [**N: Numeric and input validation**](#n-numeric-and-input-validation)
     - [**V: Text, time, locale**](#v-text-time-locale)
@@ -86,7 +86,7 @@ For each parameter, write one line per input: what goes in, what comes out, what
 | page (1-indexed) | -1 | \[2,3\] for pageSize 2 | Throw RangeError |
 | amount | -100 | Withdraw adds 100 | Reject |
 
-### **Yes/no questions**
+### **Scan table**
 
 | Q | Family | Question | If no, go to |
 | :-- | :-- | :-- | :-- |
@@ -115,7 +115,7 @@ For each parameter, write one line per input: what goes in, what comes out, what
 Values is where most bugs from the drills came from: inputs that look valid to a naive check but aren't.
 
 ### **N: Numeric and input validation**
-
+[↑ Back to Scan Table](#scan-table)
 | ID | Smell | Failing scenario | Fix | Tradeoff | Src |
 | :-- | :-- | :-- | :-- | :-- | :-- |
 | N1 | Only size <= 0 is checked | NaN <= 0 is false, so chunkArray(\[1,2,3\], NaN) returns \[\[\]\] with no error | Reject unless Number.isSafeInteger(n) and n > 0 | Strict. Flooring (lodash style) is lenient but hides bad inputs | drilled |
@@ -129,10 +129,10 @@ Values is where most bugs from the drills came from: inputs that look valid to a
 | N9 | Off-by-one in a slice or loop bound | The original paginate returned \[3\] for page 1 of size 2: the slice end was wrong and an element was dropped | Derive start and end from one formula (start = (page - 1) \* pageSize, end = start + pageSize); test the first, last and one-past-last pages | None; costs three test cases | drilled |
 
 ### **V: Text, time, locale**
-
+[↑ Back to Scan Table](#scan-table)
 | ID | Smell | Failing scenario | Fix | Tradeoff | Src |
 | :-- | :-- | :-- | :-- | :-- | :-- |
-| V1 | new Date() called inside logic | An "expired" check flakes in tests and depends on the wall clock | Inject a clock (now: () => Date) | One more parameter; worth it wherever time changes behavior | seed |
+| V1 | 🆕 Date() called inside logic | An "expired" check flakes in tests and depends on the wall clock | Inject a clock (now: () => Date) | One more parameter; worth it wherever time changes behavior | seed |
 | V2 | Local time stored or compared | A daily job runs twice or skips across a DST change; the server zone differs from your laptop | Store UTC (ISO 8601 or epoch), convert at the edge; never add 24\*60\*60\*1000 for "one day" | Calendar semantics (birthdays, billing dates) need a date plus zone, not an instant | seed |
 | V3 | Date mutability and 0-indexed months | d.setDate(...) mutates the caller's date; new Date(2026, 1, 1) is February | Copy before mutating; prefer ISO strings, or Temporal where supported | Temporal may need a polyfill; check your runtime | seed |
 | V4 | Strings treated as ASCII | "é" has different lengths in composed and decomposed forms; an emoji counts as 2 units; visually equal strings fail === | normalize("NFC") at the boundary; Intl.Segmenter for user-visible counts | Normalizing changes stored text; don't silently normalize IDs or passwords | seed |
@@ -145,7 +145,7 @@ Values is where most bugs from the drills came from: inputs that look valid to a
 A function's signature, errors and structure are a promise to its callers. These sections check that the promise is honest and survivable.
 
 ### **C: Contract and API design**
-
+[↑ Back to Scan Table](#scan-table)
 | ID | Smell | Failing scenario | Fix | Tradeoff | Src |
 | :-- | :-- | :-- | :-- | :-- | :-- |
 | C1 | Inconsistent failure policy | A bad size throws, but a null array silently returns \[\], so a failed fetch looks like "no work to do" | Pick one policy; fail fast on both and let the types guard the array | Fail-fast needs try/catch at the boundary; leniency belongs only at the system edge | drilled |
@@ -158,7 +158,7 @@ A function's signature, errors and structure are a promise to its callers. These
 | C8 | A parameter name hides its meaning at the call site | chunkArray(items, 3): size of what? An amount could be dollars or cents | Name by meaning and unit: chunkSize, pageSize, amountCents | Longer names; worth it at every call site | drilled |
 
 ### **T: Types**
-
+[↑ Back to Scan Table](#scan-table)
 | ID | Smell | Failing scenario | Fix | Tradeoff | Src |
 | :-- | :-- | :-- | :-- | :-- | :-- |
 | T1 | Non-null assertion ! | this.accounts.get(id)! returns undefined; the caller crashes later with a confusing error | Check and throw a descriptive error where the lookup happens | ! is acceptable only where the invariant is proven on the same line | drilled |
@@ -169,7 +169,7 @@ A function's signature, errors and structure are a promise to its callers. These
 | T6 | A return type or generic that doesn't tell the truth | A lookup typed to return T can return undefined at runtime; a generic parameter used nowhere constrains nothing | Return a union with undefined, or throw; drop decorative generics | A union forces every caller to handle absence, which is the point | seed |
 
 ### **A: Design (SOLID)**
-
+[↑ Back to Scan Table](#scan-table)
 | ID | Smell | Failing scenario | Fix | Tradeoff | Src |
 | :-- | :-- | :-- | :-- | :-- | :-- |
 | A1 | One class validates, persists and formats (SRP) | A change to the output format forces edits next to billing logic, and every change risks the other | Split along real reasons to change; keep orchestration thin | Over-splitting makes tiny classes and indirection | seed |
@@ -185,7 +185,7 @@ A function's signature, errors and structure are a promise to its callers. These
 These sections cover what goes wrong when state is shared, operations overlap, or a multi-step operation stops halfway. Concurrency (E) is a different concern from numeric input (N): check it separately.
 
 ### **S: State and encapsulation**
-
+[↑ Back to Scan Table](#scan-table)
 | ID | Smell | Failing scenario | Fix | Tradeoff | Src |
 | :-- | :-- | :-- | :-- | :-- | :-- |
 | S1 | A getter returns the live internal array | getHistory() returns this.history; a caller pushes to it or clears it and corrupts the audit trail | Return a copy | A copy per call is O(n); fine unless it sits in a hot loop | drilled |
@@ -195,7 +195,7 @@ These sections cover what goes wrong when state is shared, operations overlap, o
 | S5 | Sparse arrays and holes | slice preserves holes, so \[1,,3\] yields chunks with holes that forEach skips | Normalize at the boundary, or document and test it | Rare; matters when arrays come from new Array(n) or untrusted input | drilled |
 
 ### **E: Concurrency and async**
-
+[↑ Back to Scan Table](#scan-table)
 | ID | Smell | Failing scenario | Fix | Tradeoff | Src |
 | :-- | :-- | :-- | :-- | :-- | :-- |
 | E1 | A read bypasses the queue | getBalance() returns immediately while a deposit is pending, so the answer is stale (call it stale or racy, not non-deterministic) | Queue reads with writes and return Promise<number> | An API change (see C5); a sync snapshot may be enough for dashboards | drilled |
@@ -207,7 +207,7 @@ These sections cover what goes wrong when state is shared, operations overlap, o
 | E7 | An in-process queue guards a multi-process system | Two server instances both pass the check and double-spend | Database transactions, row locks or unique constraints | Distributed locks add latency and new failure modes | seed |
 
 ### **F: Failure and recovery**
-
+[↑ Back to Scan Table](#scan-table)
 | ID | Smell | Failing scenario | Fix | Tradeoff | Src |
 | :-- | :-- | :-- | :-- | :-- | :-- |
 | F1 | A multi-step operation is not atomic | transferTo debits, then target.deposit throws: money is destroyed, and between the awaits it sits in neither account | Compensating refund on failure; ideally one coordinated unit (lock both accounts or use a transaction) | Compensation exposes intermediate states; transactions need shared storage | drilled |
@@ -218,7 +218,7 @@ These sections cover what goes wrong when state is shared, operations overlap, o
 | F6 | Exceptions swallowed or flattened | catch (e) { return false } hides the cause, so callers see "nothing happened" | Catch only what you can handle, log with context, rethrow the rest | Returning false is fine for expected outcomes (insufficient funds), not for exceptions | seed |
 
 ### **R: Resources and reliability**
-
+[↑ Back to Scan Table](#scan-table)
 | ID | Smell | Failing scenario | Fix | Tradeoff | Src |
 | :-- | :-- | :-- | :-- | :-- | :-- |
 | R1 | No timeout on an external call | A slow dependency makes every request hang and the queue backs up | Explicit timeouts on every network and database call, shorter than the caller's | Too short causes false failures; base it on p99 plus margin | seed |
@@ -235,7 +235,7 @@ These sections cover what goes wrong when state is shared, operations overlap, o
 These sections cover what happens once the code leaves your editor: its data, its rollout, its attackers, its operators and its bill. Only X1, P1 to P5, H1, H2 and H6 come from exercises so far; the rest are seed entries to confirm or rewrite.
 
 ### **B: Data and persistence**
-
+[↑ Back to Scan Table](#scan-table)
 | ID | Smell | Failing scenario | Fix | Tradeoff | Src |
 | :-- | :-- | :-- | :-- | :-- | :-- |
 | B1 | A multi-step write without a transaction | The order row is inserted, the order-items insert fails, and an orphan order remains | Wrap both writes in one transaction | Long transactions hold locks; keep them short and make no network calls inside | seed |
@@ -246,7 +246,7 @@ These sections cover what happens once the code leaves your editor: its data, it
 | B6 | Wrong isolation assumption | Read balance, then write balance under READ COMMITTED: a lost update | Atomic UPDATE balance = balance - ?, SELECT ... FOR UPDATE, or a version column | Row locks reduce concurrency; optimistic retries add complexity | seed |
 
 ### **M: Migrations and rollout**
-
+[↑ Back to Scan Table](#scan-table)
 | ID | Smell | Failing scenario | Fix | Tradeoff | Src |
 | :-- | :-- | :-- | :-- | :-- | :-- |
 | M1 | A breaking schema change in one step | Renaming or dropping a column while old app instances still run causes errors mid-deploy | Expand/contract: add the new column, dual-write, backfill, switch reads, drop later | Takes several deploys; required for zero downtime | seed |
@@ -256,7 +256,7 @@ These sections cover what happens once the code leaves your editor: its data, it
 | M5 | A breaking API change | Renaming a response field breaks mobile clients still on an old version | Additive changes only; version the API; deprecate with telemetry before removal | Supporting versions costs maintenance; set a sunset policy | seed |
 
 ### **X: Security and untrusted input**
-
+[↑ Back to Scan Table](#scan-table)
 | ID | Smell | Failing scenario | Fix | Tradeoff | Src |
 | :-- | :-- | :-- | :-- | :-- | :-- |
 | X1 | A duplicate ID overwrites existing state | Bank.open('mary1') called twice replaces the account, destroying its balance and history | Check for the ID and throw; make creation explicit | An idempotent create is legitimate, but it must not reset state | drilled |
@@ -267,7 +267,7 @@ These sections cover what happens once the code leaves your editor: its data, it
 | X6 | Unsafe parsing or an unreviewed dependency | Merging parsed JSON into an object allows \_\_proto\_\_ pollution; a new package arrives with no review | Schema-validate input; use safe loaders; pin and audit dependencies | Audits slow adding libraries; automate with a lockfile and a scanner | seed |
 
 ### **O: Observability**
-
+[↑ Back to Scan Table](#scan-table)
 | ID | Smell | Failing scenario | Fix | Tradeoff | Src |
 | :-- | :-- | :-- | :-- | :-- | :-- |
 | O1 | Unstructured log lines | console.log("failed " + err) can't be searched by account or request | Structured (JSON) logs with request ID, account ID, operation and outcome | More verbose; sample high-volume debug logs | seed |
@@ -278,7 +278,7 @@ These sections cover what happens once the code leaves your editor: its data, it
 | O6 | Silent fallbacks | A retry, cache miss or clamped default kicks in with no trace, so the system "works" while degraded | Count and log every fallback and retry as a metric | Extra instrumentation; ties to C2 | seed |
 
 ### **P: Performance and scale**
-
+[↑ Back to Scan Table](#scan-table)
 | ID | Smell | Failing scenario | Fix | Tradeoff | Src |
 | :-- | :-- | :-- | :-- | :-- | :-- |
 | P1 | A hand-rolled loop where a built-in exists | Manual index math to copy chunks instead of slice | Prefer built-ins and measure before hand-optimizing | In an interview, ask whether built-ins are allowed | drilled |
@@ -289,7 +289,7 @@ These sections cover what happens once the code leaves your editor: its data, it
 | P6 | Complexity never stated | An includes call inside a loop is O(n squared): fine for 50 items, a stall at 100k | State time and space complexity in the review; use a Set or Map for membership | A Set costs memory and build time; measure at realistic sizes | seed |
 
 ### **H: Config and change hygiene**
-
+[↑ Back to Scan Table](#scan-table)
 | ID | Smell | Failing scenario | Fix | Tradeoff | Src |
 | :-- | :-- | :-- | :-- | :-- | :-- |
 | H1 | A library swap changes edge-case behavior | Replacing your own chunkArray with lodash \_.chunk turns thrown errors into \[\] for size below 1 | Compare the library's contract to what callers expect; add characterization tests first | Own helper: about 8 lines, no dependency. Library: battle-tested, different semantics | drilled |
@@ -306,7 +306,7 @@ These sections cover what happens once the code leaves your editor: its data, it
 Tests and docs are how the fixes above stay fixed. Use the input matrix as the source of test cases.
 
 ### **Q: Tests**
-
+[↑ Back to Scan Table](#scan-table)
 | ID | Smell | Failing scenario | Fix | Tradeoff | Src |
 | :-- | :-- | :-- | :-- | :-- | :-- |
 | Q1 | The test only asserts "it throws" | expect(() => f()).toThrow() passes for any error, including the wrong type | Assert the type and a message fragment: toThrow(RangeError) and /chunkSize/ | Messages change; assert a fragment, not the full text | drilled |
@@ -318,7 +318,7 @@ Tests and docs are how the fixes above stay fixed. Use the input matrix as the s
 | Q7 | Multi-step failure paths untested | transferTo is never run with a failing deposit | Inject a failing target and assert conservation: the sum of balances is unchanged | Needs a seam to inject the failure (see A5) | seed |
 
 ### **D: Docs**
-
+[↑ Back to Scan Table](#scan-table)
 | ID | Smell | Failing scenario | Fix | Tradeoff | Src |
 | :-- | :-- | :-- | :-- | :-- | :-- |
 | D1 | What throws is undocumented | Callers don't know to catch RangeError | @throws {RangeError} with the condition | Docs rot; keep them next to the code | drilled |
